@@ -1,9 +1,11 @@
 from pathlib import Path
 from difflib import get_close_matches
 
+import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
+from sentence_transformers import SentenceTransformer
 
 
 # ----------------------------
@@ -12,7 +14,7 @@ from sklearn.metrics.pairwise import linear_kernel
 
 def load_items(csv_path: Path) -> pd.DataFrame:
     """
-    Load a CSV file and build a 'content' column used for TF-IDF.
+    Load a CSV file and build a 'content' column used for TF-IDF / embeddings.
 
     Expected columns:
       - item_id
@@ -27,7 +29,7 @@ def load_items(csv_path: Path) -> pd.DataFrame:
     df["description"] = df["description"].fillna("")
     df["title"] = df["title"].fillna("")
 
-    # Combined text field for TF-IDF
+    # Combined text field for similarity models
     df["content"] = (
         df["title"].astype(str) + " " +
         df["genres"].astype(str) + " " +
@@ -80,7 +82,7 @@ def resolve_title_to_index(items: pd.DataFrame, query: str):
 
 
 # ----------------------------
-# Recommendation
+# Recommendation - TF-IDF
 # ----------------------------
 
 def recommend_content(items: pd.DataFrame, matrix, *, item_index: int, topn: int = 5) -> pd.DataFrame:
@@ -105,6 +107,64 @@ def recommend_content(items: pd.DataFrame, matrix, *, item_index: int, topn: int
     result["similarity_score"] = [round(float(cosine_sim[i]), 3) for i in indices]
 
     # Reorder columns for nicer display
+    result = result[["item_id", "title", "genres", "similarity_score"]]
+
+    return result
+
+
+# ----------------------------
+# Embedding-based recommendation
+# ----------------------------
+
+def build_embedding_matrix(items: pd.DataFrame, model_name: str = "all-MiniLM-L6-v2"):
+    """
+    Build a dense embedding matrix using a SentenceTransformer model.
+    Returns (model, embeddings).
+
+    embeddings shape: [num_items, embedding_dim]
+    """
+    model = SentenceTransformer(model_name)
+    contents = items["content"].tolist()
+
+    # Normalized embeddings -> cosine similarity = dot product
+    embeddings = model.encode(
+        contents,
+        show_progress_bar=False,
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+    )
+
+    return model, embeddings
+
+
+def recommend_content_embeddings(
+    items: pd.DataFrame,
+    embeddings: np.ndarray,
+    *,
+    item_index: int,
+    topn: int = 5,
+) -> pd.DataFrame:
+    """
+    Recommend using dense embeddings (Sentence Transformers).
+    Assumes embeddings are L2-normalized so cosine = dot product.
+    """
+    # Query vector
+    query_vec = embeddings[item_index]  # shape (d,)
+
+    # Cosine similarity via dot product with all embeddings
+    scores = embeddings @ query_vec  # shape (num_items,)
+
+    # Sort by similarity
+    indices = scores.argsort()[::-1]
+
+    # Remove itself
+    indices = [i for i in indices if i != item_index]
+
+    # Take top-N
+    indices = indices[:topn]
+
+    result = items.iloc[indices][["item_id", "title", "genres"]].copy()
+    result["similarity_score"] = [round(float(scores[i]), 3) for i in indices]
     result = result[["item_id", "title", "genres", "similarity_score"]]
 
     return result
