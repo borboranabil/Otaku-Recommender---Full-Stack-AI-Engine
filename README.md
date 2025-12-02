@@ -38,6 +38,13 @@ How to Run
 Example Session
 
 Roadmap
+---
+
+## 📄 Documentation
+
+- 📘 [Quickstart Guide](docs/QUICKSTART.md)
+- 🧩 [System Architecture](docs/ARCHITECTURE.md)
+
 
 License
 
