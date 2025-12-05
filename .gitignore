@@ -1,2 +1,15 @@
+# Python System Files
 __pycache__/
 *.pyc
+.venv/
+venv/
+.env
+
+# Frontend System Files (HUGE - Do not upload)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.DS_Store
+
+# AI Brain Files (Too big for GitHub)
+data/*.pkl
