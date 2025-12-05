@@ -21,13 +21,13 @@
     <img src="https://img.shields.io/badge/Backend-Render-0466C8?style=for-the-badge&logo=render" />
   </a>
 
-  <!-- Tech Badges -->
+  <!-- Tech -->
   <img src="https://img.shields.io/badge/FastAPI-0.104.1-009485?style=for-the-badge&logo=fastapi&logoColor=white" />
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white" />
   <img src="https://img.shields.io/badge/TF--IDF-ML%20Engine-F97316?style=for-the-badge" />
 
-  <!-- Meta -->
-  <img src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge" />
+  <!-- License (Dual Licensing) -->
+  <img src="https://img.shields.io/badge/License-Dual--Licensed-orange?style=for-the-badge" />
 
 </p>
 
@@ -35,103 +35,100 @@
 
 # 🌟 Overview
 
-> A next-gen recommendation system for **Anime, Manga, and Manhwa**, powered by  
-> **TF-IDF + Smart Semantic Search + Live Web Mode (Jikan API)**.
+A next-gen recommendation system for **Anime, Manga, and Manhwa**, powered by:
 
-🔗 **Live Demo (Frontend – Vercel)**:  
+- **TF-IDF semantic matching**
+- **Natural language understanding**
+- **Live Web Search Mode (Jikan API)**
+- **Full-stack React + FastAPI**
+
+🔗 **Frontend (Vercel):**  
 https://anime-multi-recommendation-engine.vercel.app  
 
-🔗 **Backend API (Render)**:  
+🔗 **Backend API (Render):**  
 https://anime-recommender-i8w3.onrender.com  
 
 ---
 
 # ✨ What Makes This Special?
 
-Unlike traditional recommenders, **Otaku Recommender is “alive.”**  
-It understands **titles, descriptions, moods, themes, and even vague prompts.**
+Unlike most recommenders, **Otaku Recommender can interpret moods, themes, and descriptive prompts — not just titles.**
+
+---
 
 ## 1️⃣ Smart TF-IDF Brain  
-We vectorize:
+Every item is vectorized by:
 
-- title  
-- genres  
-- description  
+- Title  
+- Genres  
+- Description  
 
-This lets the engine match anime by **tone, vibe, and theme**, not just keywords.
+This allows similarity based on **tone**, **vibe**, and **theme**, not keywords.
 
 ---
 
 ## 2️⃣ Semantic Text Mode (NEW)
 
-If the user types a **descriptive natural-language query**, no API is needed.
+If the input looks like natural language, the system treats it as a **semantic description**.
 
-Examples:
+Example prompts:
 
 sad story about a pianist
 dark psychological thriller
 samurai revenge tragedy
 wholesome romance with comedy
 
-css
-Copy code
-
-The system treats the entire input as a **semantic description** → then performs TF-IDF similarity across all titles.
-
-⚡ Works for ANY text  
-⚡ Extremely fast  
-⚡ No embeddings / GPU required  
-
-Label used:
-TF-IDF (Semantic Text Mode)
-
 yaml
 Copy code
+
+✔ No API required  
+✔ Works for any text  
+✔ Very fast  
+✔ No embeddings needed  
+
+**Label in API:**  
+`TF-IDF (Semantic Text Mode)`
 
 ---
 
 ## 3️⃣ Live Web Mode (Jikan API)
 
-Triggered when:
+Activated when:
 
-- The query looks like a *title*,  
-- It isn’t found in the CSV,  
-- Semantic mode is ON.
+- Query looks like a title  
+- Not found in CSV  
+- Smart mode ON  
 
 Flow:
 
-1. Fetch title + genres + synopsis from **Jikan**
-2. Build text content
-3. Run TF-IDF similarity on your local dataset
+1. Fetch synopsis & genres from Jikan  
+2. Build synthetic description  
+3. Run TF-IDF similarity  
 
-Label used:
-
-TF-IDF (Live Web Mode)
-
-yaml
-Copy code
+**Label:**  
+`TF-IDF (Live Web Mode)`
 
 ---
 
 ## 4️⃣ Multi-Media Support
 
-Separate databases for:
-
 - Anime  
 - Manga  
 - Manhwa  
+
+Each uses its own dataset.
 
 ---
 
 ## 5️⃣ Infinite Discovery UI
 
-Click any recommendation card → immediately search based on that item.  
-Creates a chain of *infinite recommendations*.
+Clicking any card → instantly searches that item again.  
+A smooth chain of endless recommendations.
 
 ---
 
 ## 6️⃣ YouTube Trailer Button  
-Instantly opens trailers based on the title.
+Every card includes a link to search for the trailer instantly.
 
 ---
 
@@ -149,12 +146,12 @@ Instantly opens trailers based on the title.
   <img src="docs/screenshot-samurai.png" width="85%" />
 </p>
 
-The engine detects themes:
+Finds themes like:
 
 - Samurai  
 - Revenge  
 - Tragedy  
-- Emotional conflict  
+- Dark emotional conflict  
 
 ---
 
@@ -163,12 +160,12 @@ The engine detects themes:
   <img src="docs/screenshot-psychological.png" width="85%" />
 </p>
 
-Returns titles with:
+Matches titles involving:
 
 - Psychological tension  
 - Thriller pacing  
-- Dark emotional tone  
-- Mystery / mind games  
+- Mystery / horror  
+- Emotional darkness  
 
 ---
 
@@ -179,37 +176,37 @@ Returns titles with:
 - Tailwind CSS
 - Framer Motion
 - Lucide Icons
-- Hosted on **Vercel**
+- Hosted on Vercel
 
 ### **Backend**
 - Python + FastAPI
 - TF-IDF vectorization
 - Cosine similarity
-- Jikan API for fallback search
-- Hosted on **Render**
+- Jikan API (Live Web Mode)
+- Hosted on Render
 
-> ⚠️ No Sentence-BERT — this is tuned for **low-RAM free hosting**.
+> No Sentence-BERT — optimized for low-RAM free hosting.
 
 ---
 
 # 🚀 How to Run Locally
 
-## 1️⃣ Backend Setup
+## 1️⃣ Backend
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
 uvicorn api:app --reload
-Backend now runs at:
+Backend runs at:
 
 cpp
 Copy code
 http://127.0.0.1:8000
-Useful Endpoints
-Endpoint	Description
-/health	Status check
+Endpoints
+Path	Description
+/health	Status
 /recommend	Recommendation engine
 /docs	Swagger UI
 
@@ -218,7 +215,7 @@ Example:
 bash
 Copy code
 curl "http://127.0.0.1:8000/recommend?media_type=anime&query=naruto&topn=5&use_smart_search=true"
-2️⃣ Frontend Setup
+2️⃣ Frontend
 bash
 Copy code
 cd frontend
@@ -229,7 +226,7 @@ Runs at:
 arduino
 Copy code
 http://localhost:5173
-To point frontend to local backend, edit:
+To use local backend:
 
 js
 Copy code
@@ -246,38 +243,26 @@ Otaku-Recommender/
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   └── tailwind.config.js
-├── docs/                  # Screenshots for README
+├── docs/
 └── README.md
 🔍 Recommendation Logic Summary
 ✔ Local Title Match
-Exact or substring match
-
-TF-IDF similarity
+Exact/substring match
 
 Label: TF-IDF (Local Title Match)
 
-✔ Semantic Text Mode (Descriptive Prompts)
-If query is long / descriptive
-
-Treat query as content
+✔ Semantic Text Mode
+For descriptive prompts
 
 Label: TF-IDF (Semantic Text Mode)
 
-✔ Live Web Mode (Unknown Titles)
+✔ Live Web Mode
 Fetch from Jikan
-
-Build synthetic content
-
-TF-IDF similarity
 
 Label: TF-IDF (Live Web Mode)
 
 ✔ Smart Mode OFF
-Return friendly 404 if:
-
-Title not found
-
-Semantic mode disabled
+Friendly 404 if title not found.
 
 🛣 Roadmap
 User accounts + favorites
@@ -286,12 +271,30 @@ Collaborative filtering
 
 Mood-based search
 
-Tag-based clustering
+Tag clustering
 
-Full anime detail pages
+Anime detail pages
 
-📜 License
-MIT License — free for personal & commercial use.
+📜 License — Dual Licensing (IMPORTANT)
+This project uses a Dual License Model:
+
+🔓 GPLv3 (Free)
+Use is free only if your entire project is also open-source under GPLv3.
+
+💼 Commercial License (Paid)
+Required for:
+
+Closed-source apps
+
+Commercial products
+
+SaaS usage
+
+Business integrations
+
+Contact for commercial licensing:
+
+your-email-here
 
 🙌 Credits
 Built with ❤️ by borboranabil
