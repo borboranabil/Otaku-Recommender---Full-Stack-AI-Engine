@@ -1,6 +1,7 @@
 from pathlib import Path
+from typing import Dict, Tuple
+
 import requests
-import pickle  # you can remove this import if you stop using any cache files
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -10,6 +11,7 @@ from recommender import (
     build_tfidf_matrix,
     resolve_title_to_index,
     recommend_content,
+    recommend_from_text,
 )
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -19,7 +21,7 @@ MEDIA_FILES = {
     "manhwa": "manhwa.csv",
 }
 
-app = FastAPI(title="Anime Recommendation API", version="4.0.0")
+app = FastAPI(title="Anime Recommendation API", version="5.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,8 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# For each media_type we'll store: (items_df, tfidf_matrix)
-ENGINE_STATE: dict[str, tuple] = {}
+# media_type -> (items_df, tfidf_vectorizer, tfidf_matrix)
+ENGINE_STATE: Dict[str, Tuple] = {}
 
 
 class Recommendation(BaseModel):
@@ -60,10 +62,9 @@ def startup_event():
         print(f"   📂 Loading {media} dataset from {path}...")
         items = load_items(path)
 
-        # Build TF-IDF matrix (no embeddings anymore)
-        _, tfidf_matrix = build_tfidf_matrix(items)
+        tfidf, tfidf_matrix = build_tfidf_matrix(items)
 
-        ENGINE_STATE[media] = (items, tfidf_matrix)
+        ENGINE_STATE[media] = (items, tfidf, tfidf_matrix)
 
     print("✅ System Ready!")
 
@@ -75,8 +76,8 @@ def health_check():
 
 def fetch_anime_live(query: str, media_type: str):
     """
-    Still here if you want to use it later, but currently unused
-    in the recommender (since we removed Sentence-BERT).
+    Uses Jikan API to fetch a single anime/manga by text query.
+    Returns dict with title, content, genres, image_url or None.
     """
     print(f"🌍 Searching internet for: {query}")
     try:
@@ -87,6 +88,7 @@ def fetch_anime_live(query: str, media_type: str):
 
         if not data.get("data"):
             return None
+
         item = data["data"][0]
 
         try:
@@ -115,29 +117,69 @@ def get_recommendations(
     media_type: str = Query("anime"),
     query: str = Query(...),
     topn: int = 5,
+    use_smart_search: bool = True,
 ):
     media_type = media_type.lower()
     if media_type not in ENGINE_STATE:
         raise HTTPException(status_code=404, detail="Media type not loaded")
 
-    items, tfidf_matrix = ENGINE_STATE[media_type]
+    items, tfidf, tfidf_matrix = ENGINE_STATE[media_type]
 
     # Try to match the query to an existing title in the dataset
     idx, matched_title = resolve_title_to_index(items, query)
 
-    if idx is None:
-        # For now, if the title isn't in our dataset, we return 404.
-        # (Smart web + embeddings mode was removed to fit Render free tier.)
-        raise HTTPException(status_code=404, detail="Title not found in local dataset.")
+    # --- Case 1: Found in local CSV ---
+    if idx is not None:
+        recs_df = recommend_content(items, tfidf_matrix, item_index=idx, topn=topn)
+        engine = "TF-IDF (Local Title Match)"
+        base_title = str(matched_title)
 
-    # Use TF-IDF similarity only
-    recs_df = recommend_content(items, tfidf_matrix, item_index=idx, topn=topn)
-    engine = "TF-IDF (Local)"
+        return RecommendResponse(
+            media_type=media_type,
+            engine_used=engine,
+            base_title=base_title,
+            topn=topn,
+            recommendations=[
+                Recommendation(
+                    item_id=int(row.item_id),
+                    title=str(row.title),
+                    genres=str(row.genres),
+                    image_url=str(row.image_url),
+                    similarity_score=float(row.similarity_score),
+                )
+                for _, row in recs_df.iterrows()
+            ],
+        )
+
+    # --- Case 2: Not found locally ---
+    # If smart search is off, just say "not found"
+    if not use_smart_search:
+        raise HTTPException(
+            status_code=404,
+            detail="Title not found in local dataset. Enable Semantic Search for web lookup.",
+        )
+
+    # Smart search ON → try live web search via Jikan
+    live_data = fetch_anime_live(query, media_type)
+    if not live_data:
+        raise HTTPException(status_code=404, detail="Not found via web search.")
+
+    base_title = f"{live_data['title']} (Web Search)"
+    engine = "TF-IDF (Live Web Mode)"
+
+    # Use the live content text as query for TF-IDF similarity
+    recs_df = recommend_from_text(
+        items,
+        tfidf,
+        tfidf_matrix,
+        text=live_data["content"],
+        topn=topn,
+    )
 
     return RecommendResponse(
         media_type=media_type,
         engine_used=engine,
-        base_title=str(matched_title),
+        base_title=base_title,
         topn=topn,
         recommendations=[
             Recommendation(

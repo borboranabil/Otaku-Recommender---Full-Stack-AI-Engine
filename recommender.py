@@ -9,9 +9,9 @@ def load_items(csv_path: Path) -> pd.DataFrame:
     df = pd.read_csv(csv_path)
 
     # Fill missing values
-    df["genres"] = df["genres"].fillna("")
-    df["description"] = df["description"].fillna("")
-    df["title"] = df["title"].fillna("")
+    df["genres"] = df.get("genres", "").fillna("")
+    df["description"] = df.get("description", "").fillna("")
+    df["title"] = df.get("title", "").fillna("")
 
     # Ensure image_url exists if missing
     if "image_url" not in df.columns:
@@ -19,9 +19,11 @@ def load_items(csv_path: Path) -> pd.DataFrame:
 
     # Text used for similarity
     df["content"] = (
-        df["title"].astype(str) + " " +
-        df["genres"].astype(str) + " " +
-        df["description"].astype(str)
+        df["title"].astype(str)
+        + " "
+        + df["genres"].astype(str)
+        + " "
+        + df["description"].astype(str)
     )
     return df
 
@@ -29,7 +31,7 @@ def load_items(csv_path: Path) -> pd.DataFrame:
 def build_tfidf_matrix(items: pd.DataFrame):
     """
     Build a TF-IDF matrix over the 'content' column.
-    This is light enough for Render free tier.
+    Returns both the vectorizer and the matrix.
     """
     tfidf = TfidfVectorizer(
         stop_words="english",
@@ -69,15 +71,34 @@ def recommend_content(
     topn: int = 5,
 ) -> pd.DataFrame:
     """
-    TF-IDF cosine similarity recommendation.
-    Returns topn similar items with similarity_score.
+    TF-IDF cosine similarity recommendation based on an EXISTING item.
     """
-    # Cosine similarity between the query item and all items
-    cosine_sim = linear_kernel(matrix[item_index:item_index + 1], matrix).flatten()
+    cosine_sim = linear_kernel(matrix[item_index : item_index + 1], matrix).flatten()
 
-    # Sort indices by similarity (descending), drop the item itself
     indices = cosine_sim.argsort()[::-1]
     indices = [i for i in indices if i != item_index][:topn]
+
+    result = items.iloc[indices].copy()
+    result["similarity_score"] = [round(float(cosine_sim[i]), 3) for i in indices]
+
+    return result[["item_id", "title", "genres", "image_url", "similarity_score"]]
+
+
+def recommend_from_text(
+    items: pd.DataFrame,
+    tfidf,
+    matrix,
+    *,
+    text: str,
+    topn: int = 5,
+) -> pd.DataFrame:
+    """
+    TF-IDF similarity using arbitrary text (used for live web search content).
+    """
+    query_vec = tfidf.transform([text])
+    cosine_sim = linear_kernel(query_vec, matrix).flatten()
+
+    indices = cosine_sim.argsort()[::-1][:topn]
 
     result = items.iloc[indices].copy()
     result["similarity_score"] = [round(float(cosine_sim[i]), 3) for i in indices]
