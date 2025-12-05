@@ -164,7 +164,8 @@ def get_recommendations(
     if not live_data:
         raise HTTPException(status_code=404, detail="Not found via web search.")
 
-    base_title = f"{live_data['title']} (Web Search)"
+    # 🔄 CHANGE: show the user's query, not Jikan's title
+    base_title = f"{query} (Web Search)"
     engine = "TF-IDF (Live Web Mode)"
 
     # Use the live content text as query for TF-IDF similarity
