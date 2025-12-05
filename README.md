@@ -106,8 +106,4 @@ Anime-Multi-Recommendation-Engine/
 [ ] Phase 6: Deploy to Vercel/Render
 
 📝 License
-<<<<<<< HEAD
 Distributed under the MIT License.
-=======
-Distributed under the MIT License.
->>>>>>> 9dbde51619cf483b7229a79a02d9579775b305e1
