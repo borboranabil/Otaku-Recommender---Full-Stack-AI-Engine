@@ -19,7 +19,10 @@ export default function App() {
     setResults(null);
 
     try {
+      // NOTE: If you deployed to Render, replace this URL with your Render URL
+      // e.g., const url = `https://otaku-backend.onrender.com/recommend?...`;
       const url = `http://127.0.0.1:8000/recommend?media_type=${mediaType}&query=${searchTerm}&use_smart_search=${smartSearch}&topn=5`;
+      
       const res = await fetch(url);
       if (!res.ok) throw new Error("Backend error");
       const data = await res.json();
