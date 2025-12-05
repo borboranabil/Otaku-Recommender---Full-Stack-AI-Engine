@@ -12,175 +12,207 @@
 
 Unlike standard recommendation engines that only suggest items from a fixed list, **Otaku Recommender is “alive”**:
 
-1. **Smart TF-IDF Brain**  
-   Uses `scikit-learn` TF-IDF over titles + genres + descriptions to find anime with similar *vibes*, not just exact words.
+### 1️⃣ Smart TF-IDF Brain  
+Uses `scikit-learn` TF-IDF over titles + genres + descriptions to find anime with similar *vibes*, not just exact words.
 
-2. **Live Internet Fallback (Jikan API)**  
-   If you search for something that isn’t in the local CSVs (e.g. “sad samurai revenge” or a brand-new anime),
-   the backend:
-   - queries the **Jikan API** (MyAnimeList),
-   - builds a rich text description from the result,
-   - and runs TF-IDF similarity against your local universe.
+### 2️⃣ Live Internet Fallback (Jikan API)  
+If you search for something that isn’t in the local CSVs (e.g., **“sad samurai revenge”**, **“dark psychological thriller”**, etc.), the backend:
 
-   This gives you “semantic-ish” recommendations without heavy GPU models.
+- queries the **Jikan API** (MyAnimeList),
+- builds a rich text description,
+- runs TF-IDF similarity against your local universe.
 
-3. **Multi-Media Support**  
-   Works for **Anime**, **Manga**, and **Manhwa** – each with its own dataset.
+This gives “semantic-like” recommendations **without heavy GPU models**.
 
-4. **“Infinite Discovery” UI**  
-   Click any recommendation card to pivot the search to that title instantly and keep jumping around the universe.
+### 3️⃣ Multi-Media Support  
+Works for **Anime**, **Manga**, and **Manhwa**, each with separate datasets.
 
-5. **Trailer Integration**  
-   Every card comes with a **“Watch Trailer”** button that jumps straight to YouTube search for that title.
+### 4️⃣ Infinite Discovery UI  
+Click any recommendation card → instantly start a new search based on that title.
+
+### 5️⃣ Trailer Integration  
+Each card has a **YouTube trailer** button.
 
 ---
 
-## 🖼 Screenshots
+# 🌟 Showcase — Smart Semantic Search in Action
 
-Dark Mode UI – Natural Language Search  
-*(AI can handle queries like “sad story about a pianist” or “best samurai revenge” via web fallback.)*
+The engine supports natural language queries, title-based search, and live web fallback.  
+Here are real examples:
 
-> (Screenshots live in `/docs` – Vercel preview shows them nicely.)
+---
+
+## 🏠 1. Clean & Modern Homepage UI
+
+<p align="center">
+  <img src="docs/screenshot-home.png" width="85%" />
+</p>
+
+Features:
+
+- Anime / Manga / Manhwa media switch  
+- Keyword vs Semantic mode  
+- Vibe-based searching  
+- Fully responsive dark UI  
+
+---
+
+## 🗡️ 2. Example Query — *“samurai revenge tragedy”* (Semantic Mode)
+
+<p align="center">
+  <img src="docs/screenshot-samurai.png" width="85%" />
+</p>
+
+The system identifies themes like:
+
+- Samurai  
+- Revenge  
+- Tragedy  
+- Historical conflict  
+
+Even though the dataset does NOT contain these exact words, it finds conceptual matches using enhanced TF-IDF.
+
+---
+
+## 🧠 3. Example Query — *“dark psychological thriller”* (Semantic Mode)
+
+<p align="center">
+  <img src="docs/screenshot-psychological.png" width="85%" />
+</p>
+
+Matches:
+
+- Psychological tension  
+- Thriller pacing  
+- Dark emotional tone  
+- Mature themes  
+
+This is the strongest demonstration of the “semantic-like” mode without BERT.
 
 ---
 
 ## 🧠 Tech Stack
 
 ### Frontend (The Face)
-
-- **Framework:** React (Vite)
-- **Styling:** Tailwind CSS (Dark Mode)
-- **Animations:** Framer Motion
-- **Icons:** Lucide React
-- **Hosting:** Vercel
+- **React (Vite)**
+- **Tailwind CSS** (dark mode aesthetic)
+- **Framer Motion** for smooth animations
+- **Lucide Icons**
+- **Vercel Hosting**
 
 ### Backend (The Brain)
+- **FastAPI (Python)**
+- **TF-IDF vectorization** (scikit-learn)
+- **Cosine similarity engine**
+- **Pandas + NumPy**
+- **Jikan API** for live fallback search
+- **Render Hosting**
 
-- **API Framework:** FastAPI (Python)
-- **Modeling:** `scikit-learn` TF-IDF + cosine similarity
-- **Data Handling:** Pandas, NumPy
-- **Live Data:** Jikan API (MyAnimeList) for unknown / natural-language queries
-- **Hosting:** Render (Free Web Service)
-
-> ⚠️ Note: The current deployed version **does NOT use Sentence-BERT** anymore.  
-> It’s optimized for lightweight TF-IDF + web descriptions so it can run in low-RAM environments like free Render.
+> ⚠️ This deployed version **does NOT use Sentence-BERT**  
+> It is optimized for **lightweight TF-IDF + external descriptions** to run reliably on Render free tier.
 
 ---
 
-## 🚀 How to Run Locally
+# 🚀 How to Run Locally
 
-### 1. Backend Setup (Python)
-
-The backend handles the AI logic and data processing.
+## 1️⃣ Backend Setup (Python)
 
 ```bash
-# 1. Create venv (optional but recommended)
+# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate    # Windows: .venv\Scripts\activate
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. (Optional) Download larger “universe” CSVs
-#    You can use the smaller sample CSVs in /data or run:
-# python get_ultimate_db.py
-
-# 4. Start the API
+# Start API
 uvicorn api:app --reload
-# Backend will be at: http://127.0.0.1:8000
-Useful endpoints:
+Backend will be available at:
 
-GET /health – quick status check
-
-GET /recommend – main recommendation endpoint
+cpp
+Copy code
+http://127.0.0.1:8000
+Useful Endpoints
+Endpoint	Description
+/health	Health check
+/recommend	Main recommendation endpoint
+/docs	Swagger UI
 
 Example:
 
 bash
 Copy code
 curl "http://127.0.0.1:8000/recommend?media_type=anime&query=naruto&topn=5&use_smart_search=true"
-2. Frontend Setup (React)
+2️⃣ Frontend Setup (React)
 bash
 Copy code
 cd frontend
 
-# 1. Install libraries
 npm install
-
-# 2. Start dev server
 npm run dev
-# App runs at: http://localhost:5173
-If you’re running the backend locally, you can point the frontend to http://127.0.0.1:8000.
-For production, it’s already wired to your Render URL.
+Frontend runs at:
 
+arduino
+Copy code
+http://localhost:5173
+To use local backend, update App.jsx:
+
+js
+Copy code
+const BACKEND_URL = "http://127.0.0.1:8000";
 🧬 Project Structure
-text
+powershell
 Copy code
 Anime-Multi-Recommendation-Engine/
-├── api.py                 # FastAPI server (TF-IDF + web search)
-├── recommender.py         # Core ML logic (TF-IDF + helpers)
-├── get_ultimate_db.py     # (Optional) data downloader script
-├── data/                  # Anime/Manga/Manhwa CSVs
-├── frontend/              # React application
+├── api.py                 # FastAPI server
+├── recommender.py         # TF-IDF logic + helpers
+├── data/                  # Anime/Manga/Manhwa CSV files
+├── frontend/
 │   ├── src/
-│   │   ├── App.jsx        # Main UI code
-│   │   └── main.jsx       # Entry point
-│   └── tailwind.config.js # Styling config
-└── README.md              # You are here 🙂
+│   │   ├── App.jsx        # UI logic
+│   │   └── main.jsx
+│   └── tailwind.config.js
+├── docs/                  # Screenshots for README
+└── README.md              # You are here
 🔍 Recommendation Logic (Current Version)
-Local Title Search
+✔ Local Title Search
+Try exact or substring match in CSV
 
-Try to match the query to an existing title in the CSV (exact or substring, case-insensitive).
+If found → TF-IDF similarity
 
-If found → compute TF-IDF cosine similarity vs all items in that media type.
+Label: TF-IDF (Local Title Match)
 
-Response label:
-engine_used = "TF-IDF (Local Title Match)"
+✔ Semantic Query Mode
+If title NOT found and use_smart_search=true:
 
-Semantic-ish Search (toggle ON)
+Query Jikan for the term
 
-If title isn’t in the CSV and use_smart_search=true:
+Build synthetic “content” string
 
-Call Jikan API for q=<your query>.
+Run TF-IDF similarity
 
-Build a “content” string from title + genres + synopsis.
+Label:
 
-Use that text as a query vector against the local TF-IDF matrix.
+scss
+Copy code
+TF-IDF (Live Web Mode)
+✔ Smart Mode OFF
+If title not found and semantic mode is off → return 404 message.
 
-Response label:
-engine_used = "TF-IDF (Live Web Mode)"
-base_title = "<your original query> (Web Search)"
+🛣 Roadmap
+User accounts + watchlists
 
-Smart Toggle OFF
+Rating system + collaborative filtering
 
-If title isn’t found and use_smart_search=false:
+Better intent detection
 
-Return 404 with a friendly message:
-“Title not found in local dataset. Enable Semantic Search for web lookup.”
+Mood-based recommendation mode
 
-🛣 Future Roadmap
- User accounts + “Watch List”
-
- Simple rating system and collaborative filtering
-
- Better intent detection for natural-language queries
-
- Tag-based and mood-based recommendation modes
+Full anime detail pages per title
 
 📜 License
-Distributed under the MIT License – feel free to fork, hack, and build your own otaku brain.
+MIT License — Free for personal and commercial use.
 
-yaml
-Copy code
-
----
-
-## 2️⃣ `requirements.txt` (replace whole file)
-
-```txt
-pandas
-numpy
-scikit-learn
-fastapi==0.104.1
-uvicorn==0.24.0
-requests
+🙌 Credits
+Built with ❤️ by borboranabil
+Powered by FastAPI, React, TF-IDF, and Jikan API
