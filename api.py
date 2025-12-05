@@ -21,7 +21,7 @@ MEDIA_FILES = {
     "manhwa": "manhwa.csv",
 }
 
-app = FastAPI(title="Anime Recommendation API", version="5.0.0")
+app = FastAPI(title="Anime Recommendation API", version="5.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -112,6 +112,37 @@ def fetch_anime_live(query: str, media_type: str):
         return None
 
 
+def looks_descriptive(query: str) -> bool:
+    """
+    Heuristic: long / natural-language queries like
+    'sad story about a pianist' should be treated as
+    semantic text, not as a title.
+    """
+    q = query.lower().strip()
+    tokens = q.split()
+    if len(tokens) >= 4:
+        return True
+
+    descriptive_markers = {
+        "about",
+        "story",
+        "sad",
+        "happy",
+        "revenge",
+        "romance",
+        "comedy",
+        "drama",
+        "pianist",
+        "music",
+        "school",
+        "slice",
+        "life",
+        "isekai",
+        "sports",
+    }
+    return any(t in descriptive_markers for t in tokens)
+
+
 @app.get("/recommend", response_model=RecommendResponse)
 def get_recommendations(
     media_type: str = Query("anime"),
@@ -128,7 +159,7 @@ def get_recommendations(
     # Try to match the query to an existing title in the dataset
     idx, matched_title = resolve_title_to_index(items, query)
 
-    # --- Case 1: Found in local CSV ---
+    # --- Case 1: Found in local CSV (exact / substring match) ---
     if idx is not None:
         recs_df = recommend_content(items, tfidf_matrix, item_index=idx, topn=topn)
         engine = "TF-IDF (Local Title Match)"
@@ -153,24 +184,55 @@ def get_recommendations(
 
     # --- Case 2: Not found locally ---
     if not use_smart_search:
+        # Smart search is OFF → don't guess
         raise HTTPException(
             status_code=404,
             detail=(
                 "Title not found in local dataset. "
-                "Enable Semantic Search for web lookup."
+                "Enable Semantic Search for text / web-based lookup."
             ),
         )
 
-    # Smart search ON → try live web search via Jikan
+    # Decide whether this looks like a descriptive prompt or a title
+    if looks_descriptive(query):
+        # ✅ DESCRIPTIVE QUERY MODE (what you just used)
+        # Use the raw text as TF-IDF query, no Jikan involved.
+        engine = "TF-IDF (Semantic Text Mode)"
+        base_title = f"{query} (Semantic Query)"
+
+        recs_df = recommend_from_text(
+            items,
+            tfidf,
+            tfidf_matrix,
+            text=query,
+            topn=topn,
+        )
+
+        return RecommendResponse(
+            media_type=media_type,
+            engine_used=engine,
+            base_title=base_title,
+            topn=topn,
+            recommendations=[
+                Recommendation(
+                    item_id=int(row.item_id),
+                    title=str(row.title),
+                    genres=str(row.genres),
+                    image_url=str(row.image_url),
+                    similarity_score=float(row.similarity_score),
+                )
+                for _, row in recs_df.iterrows()
+            ],
+        )
+
+    # Otherwise treat it like a title → Jikan web lookup
     live_data = fetch_anime_live(query, media_type)
     if not live_data:
         raise HTTPException(status_code=404, detail="Not found via web search.")
 
-    # Show the user's query in the UI, not Jikan's internal title
-    base_title = f"{query} (Web Search)"
     engine = "TF-IDF (Live Web Mode)"
+    base_title = f"{query} (Web Search)"
 
-    # Use the live content text as query for TF-IDF similarity
     recs_df = recommend_from_text(
         items,
         tfidf,
