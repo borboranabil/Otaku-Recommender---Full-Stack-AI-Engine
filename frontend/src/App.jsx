@@ -1,13 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Sparkles, BookOpen, Tv, Zap, Youtube } from "lucide-react";
 
+// Backend base URL
+const BACKEND_URL = "https://anime-recommender-i8w3.onrender.com";
+
 export default function App() {
+  const [initializing, setInitializing] = useState(true);   // <--- NEW
   const [query, setQuery] = useState("");
   const [mediaType, setMediaType] = useState("anime");
   const [smartSearch, setSmartSearch] = useState(false);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Ping backend once on app load to wake Render
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/health`)
+      .catch((err) => {
+        console.warn("Health check failed (maybe backend still waking):", err);
+      })
+      .finally(() => {
+        setInitializing(false);
+      });
+  }, []);
 
   const fetchRecommendations = async (overrideQuery = null) => {
     const searchTerm = overrideQuery || query;
@@ -19,7 +34,7 @@ export default function App() {
     setResults(null);
 
     try {
-      const url = `https://anime-recommender-i8w3.onrender.com/recommend?media_type=${mediaType}&query=${encodeURIComponent(
+      const url = `${BACKEND_URL}/recommend?media_type=${mediaType}&query=${encodeURIComponent(
         searchTerm
       )}&topn=5&use_smart_search=${smartSearch}`;
 
@@ -57,6 +72,20 @@ export default function App() {
       "_blank"
     );
   };
+
+  // --- Warmup screen while backend wakes up ---
+  if (initializing) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
+        <div className="text-3xl font-bold mb-4 animate-pulse">
+          ⚙️ Warming up the Otaku Engine…
+        </div>
+        <p className="text-sm text-gray-400">
+          Backend is hosted on free tier, so it may take a few seconds to wake up.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans p-8 flex flex-col items-center">
