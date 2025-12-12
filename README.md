@@ -257,25 +257,25 @@ Semantic Text Mode	Descriptive prompt	TF-IDF (Semantic Text Mode)
 Live Web Mode	Unknown title + smart mode	TF-IDF (Live Web Mode)
 Smart Mode OFF	Not found	Friendly 404
 
-📜 License — Dual Licensing (IMPORTANT)
-This project uses Dual Licensing:
+📜 License
 
-🔓 GPLv3 (Free)
-You may use this project only if your project is also open-source under GPLv3.
+This project uses a **Dual License** model:
 
-💼 Commercial License (Paid)
-Required for:
+### GPL-3.0 (Open Source)
+You may use the project for free **as long as your project is also GPL-3.0 and open-source**.
 
-Closed-source apps
+See: `LICENSE_GPLv3`
 
-Commercial products
+### Commercial License (Closed Source / Business Use)
+Required if you want to use this project in:
 
-SaaS platforms
+- Closed-source apps  
+- Commercial SaaS  
+- Paid services  
+- Proprietary systems  
 
-Business integrations
-
-📩 Contact for licensing:
-borboranabil.dev@outlook.com
+See: `COMMERCIAL_LICENSE.md`  
+Contact: borboranabil.dev@outlook.com
 
 🙌 Credits
 Built with ❤️ by borboranabil
